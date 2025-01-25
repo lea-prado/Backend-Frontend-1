@@ -1,5 +1,5 @@
 {
-  "name": "backend-frontend-1",
+  "name": "express",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -8,5 +8,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "type": "module"
 }
