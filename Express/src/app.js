@@ -3,7 +3,8 @@ import express from 'express';
 //Importar los routers
 import userRouter from './routes/user.router.js';
 import petRouter from './routes/pet.router.js';
-
+import productRouter from './routes/product.router.js';
+import cartRouter from './routes/cart.router.js';
 
 const app = express();
 
@@ -17,5 +18,7 @@ app.listen(8080, () => {
 })
 
 //Implementamos los routers que creamos
-app.use('./api/users', userRouter);
-app.use('./api/pets', petRouter);
+app.use('/api/users', userRouter);
+app.use('/api/pets', petRouter);
+app.use('/api/products', productRouter);
+app.use('/api/carts', cartRouter);
