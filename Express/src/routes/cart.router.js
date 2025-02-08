@@ -51,4 +51,12 @@ router.post('/:cid/product/:pid', (req, res) => {
     res.status(201).json({ message: 'Producto agregado al carrito.', cart });
 });
 
-export default router;
+export default (io) => {
+    const router = Router();
+
+    router.post('/', (req, res) => {
+        res.json({ message: 'Carrito creado' });
+    });
+
+    return router;
+};

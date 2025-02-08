@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        header {
+            background: #333;
+            color: white;
+            padding: 15px;
+        }
+        header h1 a {
+            color: white;
+            text-decoration: none;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #218838;
+        }
+        h2 {
+            margin-top: 20px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: white;
+            margin: 10px auto;
+            padding: 10px;
+            border-radius: 5px;
+            width: 60%;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+            const productList = document.getElementById('productList');
+
+            // Escuchar actualizaciones de productos y mostrarlos en la lista
+            socket.on('updateProducts', (products) => {
+                productList.innerHTML = '';
+                products.forEach(product => {
+                    const li = document.createElement('li');
+                    li.textContent = `${product.title} - $${product.price}`;
+                    productList.appendChild(li);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <h1><a href="/products">Inicio</a></h1>
+        <button onclick="window.location.href='/realtimeproducts'">Ver Productos en Tiempo Real</button>
+    </header>
+    
+    <h2>Lista de Productos</h2>
+    <ul id="productList">
+        {{#each products}}
+            <li><strong>{{this.title}}</strong> - ${{this.price}}</li>
+        {{/each}}
+    </ul>
+</body>
+</html>
