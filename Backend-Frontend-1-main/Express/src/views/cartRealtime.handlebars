@@ -1,0 +1,103 @@
+<!-- views/cartRealTime.handlebars -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Mi Tienda</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h1 class="mb-4">Carrito en Tiempo Real</h1>
+    <div id="cartList" class="mb-4"></div>
+
+    <h2>Agregar Producto (por ID)</h2>
+    <form id="addProductForm" class="mb-4">
+      <div class="mb-3">
+        <label for="productId" class="form-label">ID del Producto</label>
+        <input type="text" class="form-control" id="productId" placeholder="Ingresa el ID del producto" required>
+      </div>
+      <div class="mb-3">
+        <label for="quantity" class="form-label">Cantidad</label>
+        <input type="number" class="form-control" id="quantity" value="1" min="1" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Agregar al Carrito</button>
+    </form>
+  </div>
+
+  <script>
+    const socket = io();
+    const cartList = document.getElementById('cartList');
+    const addProductForm = document.getElementById('addProductForm');
+    const cartId = localStorage.getItem('cartId');
+
+    function renderCart(cart) {
+      cartList.innerHTML = '';
+      if (cart && cart.products && cart.products.length > 0) {
+        const ul = document.createElement('ul');
+        ul.className = 'list-group';
+        cart.products.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item d-flex justify-content-between align-items-center';
+          li.innerHTML = `
+            <div>
+              <strong>${item.product.title}</strong>
+              <br>Precio: $${item.product.price} | Cantidad: ${item.quantity}
+            </div>
+          `;
+          // Botón para eliminar el producto
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'btn btn-sm btn-danger';
+          removeBtn.textContent = 'Eliminar';
+          removeBtn.onclick = () => {
+            socket.emit('removeFromCart', { cartId, productId: item.product._id });
+          };
+          li.appendChild(removeBtn);
+          ul.appendChild(li);
+        });
+        cartList.appendChild(ul);
+      } else {
+        cartList.innerHTML = '<p class="text-muted">El carrito está vacío o no existe.</p>';
+      }
+    }
+
+    // Al conectar, pedimos el carrito si hay cartId
+    if (cartId) {
+      socket.emit('getCart', { cartId });
+    } else {
+      cartList.innerHTML = '<p class="text-muted">No se encontró un carrito activo en localStorage. Regresa al inicio.</p>';
+    }
+
+    // Escuchar carrito actualizado
+    socket.on('cartUpdated', (cart) => {
+      if (cart && cart._id === cartId) {
+        renderCart(cart);
+      }
+    });
+
+    // Form para agregar producto por ID
+    addProductForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!cartId) {
+        alert("No hay carrito activo. Regresa al inicio.");
+        return;
+      }
+      const productId = document.getElementById('productId').value.trim();
+      const quantity = parseInt(document.getElementById('quantity').value) || 1;
+      socket.emit('addToCart', { cartId, productId, quantity });
+      e.target.reset();
+    });
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

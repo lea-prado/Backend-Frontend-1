@@ -1,0 +1,50 @@
+<!-- views/cartDetail.handlebars -->
+{{#extends 'layouts/main'}}
+
+{{#section 'body'}}
+  <h1>{{title}}</h1>
+  {{#if cart.products.length}}
+    <ul class="list-group">
+      {{#each cart.products}}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{this.product.title}}</strong> - Cantidad: {{this.quantity}}
+            <br>
+            Precio Unitario: ${{this.product.price}}
+          </div>
+          <div>
+            <button class="btn btn-sm btn-danger" onclick="eliminarProducto('{{../cart._id}}','{{this.product._id}}')">
+              Eliminar
+            </button>
+          </div>
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p>El carrito está vacío.</p>
+  {{/if}}
+
+  <br>
+  <a href="/" class="btn btn-secondary">Volver a Productos</a>
+
+  <script>
+    function eliminarProducto(cartId, productId) {
+      fetch(`/api/carts/${cartId}/products/${productId}`, {
+        method: 'DELETE'
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.cart) {
+          // Actualiza el carrito en localStorage
+          localStorage.setItem('cart', JSON.stringify(data.cart));
+        }
+        alert(data.message || "Producto eliminado del carrito");
+        location.reload(); // Recarga la página para ver los cambios
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error al eliminar el producto");
+      });
+    }
+  </script>
+{{/section}}
