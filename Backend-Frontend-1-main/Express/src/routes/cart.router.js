@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
 
 /**
  * GET /api/carts/:cid
- * Obtener un carrito (populate)
+ * Obtener un carrito con populate (para ver detalles de cada producto)
  */
 router.get('/:cid', async (req, res) => {
   try {
@@ -53,7 +53,7 @@ router.delete('/:cid/products/:pid', async (req, res) => {
 
 /**
  * PUT /api/carts/:cid
- * Actualizar todo el arreglo de productos del carrito
+ * Actualizar TODO el arreglo de productos del carrito
  */
 router.put('/:cid', async (req, res) => {
   try {
@@ -76,7 +76,7 @@ router.put('/:cid', async (req, res) => {
 
 /**
  * PUT /api/carts/:cid/products/:pid
- * Actualizar solo la cantidad de un producto en el carrito
+ * Actualizar SÓLO la cantidad de un producto del carrito
  */
 router.put('/:cid/products/:pid', async (req, res) => {
   try {

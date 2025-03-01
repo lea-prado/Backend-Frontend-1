@@ -25,7 +25,7 @@
   {{/if}}
 
   <br>
-  <a href="/" class="btn btn-secondary">Volver a Productos</a>
+  <a href="/products" class="btn btn-secondary">Volver a Productos</a>
 
   <script>
     function eliminarProducto(cartId, productId) {
@@ -35,11 +35,11 @@
       .then(res => res.json())
       .then(data => {
         if (data.cart) {
-          // Actualiza el carrito en localStorage
-          localStorage.setItem('cart', JSON.stringify(data.cart));
+          alert(data.message || "Producto eliminado del carrito");
+          location.reload(); // Recarga la página para ver los cambios
+        } else {
+          alert("No se pudo eliminar el producto del carrito");
         }
-        alert(data.message || "Producto eliminado del carrito");
-        location.reload(); // Recarga la página para ver los cambios
       })
       .catch(err => {
         console.error(err);

@@ -1,13 +1,13 @@
-// app.js
+import dotenv from 'dotenv';
+dotenv.config();  
 import express from 'express';
 import http from 'http';
 import { Server as SocketIO } from 'socket.io';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import handlebars from 'express-handlebars';
 import __dirname from './util.js';
 
-// Importar modelos para usarlos en eventos de socket
+// Modelos
 import Product from './models/products.models.js';
 import Cart from './models/cart.models.js';
 
@@ -16,11 +16,10 @@ import productRouter from './routes/product.router.js';
 import cartRouter from './routes/cart.router.js';
 import viewsRouter from './routes/views.router.js';
 
-// Cargar variables de entorno
-dotenv.config();
-const URLMongoDB = process.env.URLMongoDB || "mongodb://localhost:27017/miBase";
-const PORT = process.env.PORT || 8080;
 
+const URLMongoDB = process.env.URLMongoDB;
+const PORT = process.env.PORT || 8080;
+console.log("URLMongoDB:", process.env.URLMongoDB);
 // Conexión a MongoDB
 mongoose.connect(URLMongoDB)
   .then(() => console.log("Conexión a base de datos exitosa"))
@@ -61,7 +60,7 @@ io.on('connection', async (socket) => {
   const products = await Product.find().lean();
   socket.emit('updateProducts', products);
 
-  // Crear nuevo producto desde la vista realTimeProducts.handlebars
+  // Crear nuevo producto (desde realTimeProducts.handlebars)
   socket.on('newProduct', async (data) => {
     try {
       const { title, price } = data;
@@ -80,6 +79,18 @@ io.on('connection', async (socket) => {
     } catch (error) {
       console.error("Error al agregar producto:", error);
       socket.emit('error', { message: "No se pudo agregar el producto" });
+    }
+  });
+
+  // Eliminar un producto (desde realTimeProducts.handlebars)
+  socket.on('deleteProduct', async (productId) => {
+    try {
+      await Product.findByIdAndDelete(productId);
+      const updatedProducts = await Product.find().lean();
+      io.emit('updateProducts', updatedProducts);
+    } catch (error) {
+      console.error("Error al eliminar producto:", error);
+      socket.emit('error', { message: "No se pudo eliminar el producto" });
     }
   });
 

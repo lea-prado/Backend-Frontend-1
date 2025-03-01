@@ -1,111 +1,44 @@
-{{!-- views/realTimeProducts.handlebars --}}
-
+<!-- views/productDetail.handlebars -->
 {{#extends 'layouts/main'}}
 
 {{#section 'body'}}
-<header class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white">
-  <h1 class="h3 mb-0">
-    <a href="/" class="text-white text-decoration-none">Mi Tienda</a>
-  </h1>
-  <div>
-    <button class="btn btn-outline-light me-2" onclick="window.location.href='/cartrealtime'">Ver Carrito en Tiempo Real</button>
-    <button class="btn btn-outline-light" onclick="window.location.href='/'">Volver a Inicio</button>
-  </div>
-</header>
-
-<h2 class="mt-4">Lista de Productos</h2>
-<ul id="productList" class="list-unstyled"></ul>
-
-<h2>Carrito de Compras</h2>
-<ul id="cartList" class="list-unstyled"></ul>
-
-<h2>Agregar Nuevo Producto</h2>
-<form id="productForm" class="mb-4">
+  <h1 class="mb-4">{{product.title}}</h1>
   <div class="mb-3">
-    <input type="text" name="title" placeholder="Título del producto" class="form-control" required>
+    <p><strong>Precio:</strong> ${{product.price}}</p>
+    <p><strong>Categoría:</strong> {{product.category}}</p>
+    <p><strong>Descripción:</strong> {{product.description}}</p>
+    <p><strong>Stock:</strong> {{product.stock}}</p>
+    <p><strong>Estado (status):</strong> {{product.status}}</p>
   </div>
-  <div class="mb-3">
-    <input type="number" name="price" placeholder="Precio del producto" class="form-control" required>
-  </div>
-  <button type="submit" class="btn btn-primary">Agregar Producto</button>
-</form>
+  <button class="btn btn-primary" onclick="agregarAlCarrito('{{product._id}}')">
+    Agregar al Carrito
+  </button>
+  <br><br>
+  <a href="/products" class="btn btn-secondary">Volver a la lista de productos</a>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const socket = io();
-    const productList = document.getElementById('productList');
-    const cartList = document.getElementById('cartList');
-    const productForm = document.getElementById('productForm');
-    const cartId = localStorage.getItem('cartId'); // Creado automáticamente por main.handlebars
-
-    // Al recibir la lista de productos
-    socket.on('updateProducts', (products) => {
-      productList.innerHTML = '';
-      products.forEach(product => {
-        const li = document.createElement('li');
-        li.className = 'mb-2 border p-2 d-flex justify-content-between align-items-center';
-        li.innerHTML = `<strong>${product.title}</strong> - $${product.price}`;
-
-        const addButton = document.createElement('button');
-        addButton.textContent = 'Agregar al Carrito';
-        addButton.className = 'btn btn-sm btn-success';
-        addButton.onclick = () => {
-          if (!cartId) {
-            alert("No hay carrito activo. Vuelve a la página principal para crearlo automáticamente.");
-            return;
-          }
-          socket.emit('addToCart', { cartId, productId: product._id, quantity: 1 });
-        };
-        
-        li.appendChild(addButton);
-        productList.appendChild(li);
-      });
-    });
-
-    // Al recibir el carrito actualizado
-    socket.on('updateCart', (cart) => {
-      // Solo refrescamos si coincide el cartId
-      if (!cartId || !cart || cart._id !== cartId) return;
-      renderCart(cart);
-    });
-
-    function renderCart(cart) {
-      cartList.innerHTML = '';
-      if (cart.products && cart.products.length > 0) {
-        cart.products.forEach(item => {
-          const li = document.createElement('li');
-          li.className = 'mb-2 border p-2 d-flex justify-content-between align-items-center';
-          li.innerHTML = `Producto: ${item.product.title} - Cantidad: ${item.quantity}`;
-          
-          const removeButton = document.createElement('button');
-          removeButton.textContent = 'Eliminar';
-          removeButton.className = 'btn btn-sm btn-danger';
-          removeButton.onclick = () => {
-            socket.emit('removeFromCart', { cartId, productId: item.product._id });
-          };
-          li.appendChild(removeButton);
-          cartList.appendChild(li);
+  <script>
+    async function agregarAlCarrito(productId) {
+      try {
+        const cartId = localStorage.getItem('cartId');
+        if (!cartId) {
+          alert("No se encontró un cartId en localStorage. Vuelve a cargar la página.");
+          return;
+        }
+        const res = await fetch(`/api/carts/${cartId}/products/${productId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity: 1 })
         });
-      } else {
-        cartList.innerHTML = '<p>El carrito está vacío.</p>';
+        const data = await res.json();
+        if (data.cart) {
+          alert(data.message || "Producto agregado al carrito");
+        } else {
+          alert("No se pudo agregar el producto al carrito");
+        }
+      } catch (error) {
+        console.error("Error al agregar producto al carrito:", error);
+        alert("Error al agregar producto al carrito");
       }
     }
-
-    // Al conectar, el servidor envía 'updateProducts'
-    // y podemos pedir el carrito si existe cartId
-    if (cartId) {
-      socket.emit('getCart', { cartId });
-    }
-
-    // Manejo del formulario para agregar un nuevo producto
-    productForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = e.target.title.value;
-      const price = parseFloat(e.target.price.value);
-      socket.emit('newProduct', { title, price });
-      e.target.reset();
-    });
-  });
-</script>
+  </script>
 {{/section}}

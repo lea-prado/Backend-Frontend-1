@@ -7,9 +7,17 @@ const router = Router();
 
 /**
  * GET /
+ * Redirige a /products
+ */
+router.get('/', (req, res) => {
+  return res.redirect('/products');
+});
+
+/**
+ * GET /products
  * Renderiza la vista con paginación de productos (index.handlebars).
  */
-router.get('/', async (req, res) => {
+router.get('/products', async (req, res) => {
   try {
     let { limit, page, sort, query } = req.query;
     
@@ -33,6 +41,7 @@ router.get('/', async (req, res) => {
     const totalDocs  = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalDocs / limit);
 
+    // Ajustar la página si se sale de rango
     if (page > totalPages && totalPages > 0) page = totalPages;
     if (page < 1) page = 1;
 
@@ -44,14 +53,18 @@ router.get('/', async (req, res) => {
 
     const hasPrevPage = page > 1;
     const hasNextPage = page < totalPages;
+    const prevPage = page - 1;
+    const nextPage = page + 1;
 
     const prevLink = hasPrevPage
-      ? `/?limit=${limit}&page=${page - 1}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
+      ? `/products?limit=${limit}&page=${prevPage}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
       : null;
     const nextLink = hasNextPage
-      ? `/?limit=${limit}&page=${page + 1}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
+      ? `/products?limit=${limit}&page=${nextPage}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
       : null;
 
+    // Renderizamos la vista "index.handlebars"
+    // También podríamos responder JSON, pero en vistas normalmente renderizamos HTML
     res.render('index', {
       title: 'Lista de Productos',
       products,
@@ -63,20 +76,9 @@ router.get('/', async (req, res) => {
       nextLink
     });
   } catch (error) {
-    console.error("Error en GET /:", error);
+    console.error("Error en GET /products:", error);
     res.status(500).send("Error al obtener productos");
   }
-});
-
-/**
- * GET /products
- * Redirige a la ruta principal para reutilizar la lógica de paginación
- */
-router.get('/products', (req, res) => {
-  const queryString = Object.entries(req.query)
-    .map(([key, val]) => `${key}=${val}`)
-    .join('&');
-  res.redirect(`/?${queryString}`);
 });
 
 /**
@@ -95,7 +97,7 @@ router.get('/products/:pid', async (req, res) => {
 
 /**
  * GET /carts/:cid
- * Vista de un carrito específico
+ * Vista de un carrito específico (con populate).
  */
 router.get('/carts/:cid', async (req, res) => {
   try {

@@ -6,7 +6,8 @@ const router = Router();
 
 /**
  * GET /api/products
- * Retorna los productos con paginación, filtros y ordenamiento.
+ * Retorna los productos con paginación, filtros y ordenamiento (asc/desc por precio).
+ * Además, filtra por categoría o status (disponibilidad).
  */
 router.get('/', async (req, res) => {
   try {
@@ -17,6 +18,7 @@ router.get('/', async (req, res) => {
 
     let filter = {};
     if (query) {
+      // Filtrar por status (true/false) o categoría
       if (query.toLowerCase() === 'true' || query.toLowerCase() === 'false') {
         filter.status = query.toLowerCase() === 'true';
       } else {
@@ -31,6 +33,7 @@ router.get('/', async (req, res) => {
     const totalDocs = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalDocs / limit);
 
+    // Ajustar la página si se sale de rango
     if (page > totalPages && totalPages > 0) page = totalPages;
     if (page < 1) page = 1;
 
@@ -42,18 +45,23 @@ router.get('/', async (req, res) => {
 
     const hasPrevPage = page > 1;
     const hasNextPage = page < totalPages;
+    const prevPage = page - 1;
+    const nextPage = page + 1;
 
     const prevLink = hasPrevPage
-      ? `/api/products?limit=${limit}&page=${page - 1}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
+      ? `/api/products?limit=${limit}&page=${prevPage}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
       : null;
     const nextLink = hasNextPage
-      ? `/api/products?limit=${limit}&page=${page + 1}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
+      ? `/api/products?limit=${limit}&page=${nextPage}${sort ? `&sort=${sort}` : ''}${query ? `&query=${query}` : ''}`
       : null;
 
+    // Respuesta en formato JSON con la estructura solicitada
     res.json({
       status: "success",
       payload: products,
       totalPages,
+      prevPage,
+      nextPage,
       page,
       hasPrevPage,
       hasNextPage,

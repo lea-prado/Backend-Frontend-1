@@ -32,6 +32,13 @@
       box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
       display: flex; justify-content: space-between; align-items: center;
     }
+    .btn-delete {
+      background-color: #dc3545;
+      margin-left: 10px;
+    }
+    .btn-delete:hover {
+      background-color: #c82333;
+    }
   </style>
 </head>
 <body>
@@ -62,7 +69,7 @@
       const productList = document.getElementById('productList');
       const cartList = document.getElementById('cartList');
       const productForm = document.getElementById('productForm');
-      const cartId = localStorage.getItem('cartId'); // Se crea en layouts/main.handlebars
+      const cartId = localStorage.getItem('cartId');
 
       // Al recibir la lista de productos
       socket.on('updateProducts', (products) => {
@@ -71,6 +78,7 @@
           const li = document.createElement('li');
           li.innerHTML = `<strong>${product.title}</strong> - $${product.price}`;
 
+          // Botón "Agregar al Carrito"
           const addButton = document.createElement('button');
           addButton.textContent = 'Agregar al Carrito';
           addButton.onclick = () => {
@@ -80,8 +88,18 @@
             }
             socket.emit('addToCart', { cartId, productId: product._id, quantity: 1 });
           };
-          
           li.appendChild(addButton);
+
+          // Botón "Eliminar" producto
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Eliminar';
+          deleteButton.classList.add('btn-delete');
+          deleteButton.onclick = () => {
+            // Emitimos el evento deleteProduct al servidor
+            socket.emit('deleteProduct', product._id);
+          };
+          li.appendChild(deleteButton);
+
           productList.appendChild(li);
         });
       });

@@ -14,7 +14,8 @@
     "express": "^4.21.2",
     "express-handlebars": "^8.0.1",
     "mogoose": "^0.0.1-security",
-    "mongoose": "^8.10.2",
+    "mongoose": "^8.11.0",
+    "nodemon": "^3.1.9",
     "socket.io": "^4.8.1"
   },
   "type": "module"
